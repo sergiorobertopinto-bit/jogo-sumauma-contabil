@@ -24,7 +24,6 @@
           <label for="teamName">Equipe</label>
           <input id="teamName" type="text" placeholder="Nome da equipe" maxlength="40" />
           <button id="saveTeamBtn" class="ghost-btn" type="button">Entrar</button>
-          <button id="soundBtn" class="ghost-btn sound-btn" type="button">Som: off</button>
           <button id="restartBtn" class="ghost-btn" type="button" title="Recomeçar campanha">Recomeçar</button>
         </div>
       </header>
@@ -38,29 +37,12 @@
               Compare Simples Nacional, Lucro Presumido, Lucro Real, riscos de Lucro Arbitrado e a transição
               para IBS/CBS. Cada decisão mexe com caixa, reputação e conformidade.
             </p>
-            <div class="audio-panel">
-              <button id="startVideoBtn" class="primary-btn" type="button">▶ Assistir vídeo do cliente</button>
-              <button id="pauseVideoBtn" class="ghost-btn" type="button">Pausar vídeo</button>
-              <button id="bigSoundBtn" class="ghost-btn" type="button">Ativar som ambiente</button>
-            </div>
           </div>
           <div id="caseVisual" class="case-visual" aria-label="Cenário visual do caso">
-            <video id="clientVideo" class="client-video" playsinline controls preload="metadata"></video>
-            <img id="clientGif" class="client-gif" alt="Vídeo animado do cliente" />
-            <audio id="clientAudio" preload="metadata"></audio>
-            <div id="videoPlaceholder" class="video-placeholder">
-              <strong>Vídeo IA do cliente</strong>
-              <span>Adicione o MP4 deste nível em <code>assets/videos/</code> para substituir a imagem.</span>
-            </div>
-            <div id="speechBubble" class="speech-bubble"></div>
-            <div class="voice-bars" aria-hidden="true"><span></span><span></span><span></span></div>
-            <div class="video-hud" aria-hidden="true">
-              <span class="rec-dot"></span>
-              <span>Cliente ao vivo</span>
-            </div>
-            <div class="visual-overlay">
+            <div class="visual-overlay company-overlay">
               <span id="visualPlace"></span>
               <strong id="visualTitle"></strong>
+              <p id="companyDescription"></p>
             </div>
           </div>
         </section>
@@ -114,11 +96,6 @@
                 <strong id="characterName"></strong>
                 <p id="characterLine"></p>
               </div>
-            </div>
-
-            <div class="interaction-card">
-              <button id="talkBtn" class="ghost-btn" type="button">Conversar com o cliente</button>
-              <p id="interactionLine"></p>
             </div>
 
             <p id="caseStory" class="case-story"></p>

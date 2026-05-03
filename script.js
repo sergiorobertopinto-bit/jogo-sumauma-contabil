@@ -25,39 +25,6 @@ const caseImages = [
   "linear-gradient(135deg, rgba(87, 39, 41, .24), rgba(35, 48, 54, .22)), url('assets/case-8-fiscalizacao.png')",
 ];
 
-const caseVideoFiles = [
-  "assets/videos/case-1.mp4",
-  "assets/videos/case-2.mp4",
-  "assets/videos/case-3.mp4",
-  "assets/videos/case-4.mp4",
-  "assets/videos/case-5.mp4",
-  "assets/videos/case-6.mp4",
-  "assets/videos/case-7.mp4",
-  "assets/videos/case-8.mp4",
-];
-
-const caseGifFiles = [
-  "assets/videos/case-1.gif",
-  "assets/videos/case-2.gif",
-  "assets/videos/case-3.gif",
-  "assets/videos/case-4.gif",
-  "assets/videos/case-5.gif",
-  "assets/videos/case-6.gif",
-  "assets/videos/case-7.gif",
-  "assets/videos/case-8.gif",
-];
-
-const caseAudioFiles = [
-  "assets/audio/case-1.wav",
-  "assets/audio/case-2.wav",
-  "assets/audio/case-3.wav",
-  "assets/audio/case-4.wav",
-  "assets/audio/case-5.wav",
-  "assets/audio/case-6.wav",
-  "assets/audio/case-7.wav",
-  "assets/audio/case-8.wav",
-];
-
 const cases = [
   {
     title: "A Juçara que virou assinatura mensal",
@@ -430,10 +397,6 @@ const state = {
   answers: Array(cases.length).fill(null),
   calcInputs: {},
   calcResults: {},
-  talkIndex: 0,
-  soundOn: false,
-  videoPlaying: false,
-  videoLine: 0,
   teacherOpen: false,
 };
 
@@ -445,10 +408,6 @@ const els = {
   currentTeam: document.querySelector("#currentTeam"),
   teamName: document.querySelector("#teamName"),
   saveTeam: document.querySelector("#saveTeamBtn"),
-  sound: document.querySelector("#soundBtn"),
-  bigSound: document.querySelector("#bigSoundBtn"),
-  startVideo: document.querySelector("#startVideoBtn"),
-  pauseVideo: document.querySelector("#pauseVideoBtn"),
   levelList: document.querySelector("#levelList"),
   difficulty: document.querySelector("#caseDifficulty"),
   title: document.querySelector("#caseTitle"),
@@ -456,18 +415,12 @@ const els = {
   avatar: document.querySelector("#avatar"),
   characterName: document.querySelector("#characterName"),
   characterLine: document.querySelector("#characterLine"),
-  interactionLine: document.querySelector("#interactionLine"),
-  talkBtn: document.querySelector("#talkBtn"),
   story: document.querySelector("#caseStory"),
   data: document.querySelector("#caseData"),
   visual: document.querySelector("#caseVisual"),
-  clientVideo: document.querySelector("#clientVideo"),
-  clientGif: document.querySelector("#clientGif"),
-  clientAudio: document.querySelector("#clientAudio"),
-  videoPlaceholder: document.querySelector("#videoPlaceholder"),
   visualPlace: document.querySelector("#visualPlace"),
   visualTitle: document.querySelector("#visualTitle"),
-  speechBubble: document.querySelector("#speechBubble"),
+  companyDescription: document.querySelector("#companyDescription"),
   optionsTab: document.querySelector("#optionsTab"),
   calcTab: document.querySelector("#calcTab"),
   reformTab: document.querySelector("#reformTab"),
@@ -510,162 +463,6 @@ function saveReports(reports) {
 
 function activeTeam() {
   return state.team.trim() || "Equipe sem nome";
-}
-
-let audioCtx;
-let musicTimer;
-
-function ensureAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-
-function playTone(freq = 440, duration = 0.12, gainValue = 0.04) {
-  if (!state.soundOn) return;
-  ensureAudio();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = "triangle";
-  osc.frequency.value = freq;
-  gain.gain.value = gainValue;
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-  osc.start();
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-  osc.stop(audioCtx.currentTime + duration);
-}
-
-function startMusic() {
-  ensureAudio();
-  stopMusic();
-  const notes = [196, 247, 294, 330, 294, 247];
-  let step = 0;
-  musicTimer = window.setInterval(() => {
-    playTone(notes[step % notes.length], 0.09, 0.018);
-    step += 1;
-  }, 520);
-}
-
-function stopMusic() {
-  if (musicTimer) window.clearInterval(musicTimer);
-  musicTimer = null;
-}
-
-function speakLine(text) {
-  els.speechBubble.textContent = text;
-}
-
-function setSound(on) {
-  state.soundOn = on;
-  els.sound.textContent = state.soundOn ? "Som: on" : "Som: off";
-  els.bigSound.textContent = state.soundOn ? "Som ambiente ativo" : "Ativar som ambiente";
-  if (state.soundOn) {
-    startMusic();
-    playTone(520, 0.15, 0.05);
-  } else {
-    stopMusic();
-  }
-}
-
-function currentTalkLines() {
-  return [...cases[state.current].talks, ...(dialogueExtensions[state.current] || [])];
-}
-
-function startClientVideo() {
-  if (els.visual.classList.contains("has-gif") && !els.visual.classList.contains("has-video")) {
-    state.videoPlaying = true;
-    els.visual.classList.add("video-playing", "speaking");
-    const src = caseGifFiles[state.current];
-    els.clientGif.src = `${src}?play=${Date.now()}`;
-    if (els.visual.classList.contains("has-audio")) {
-      els.clientAudio.currentTime = 0;
-      const audioPromise = els.clientAudio.play();
-      if (audioPromise) {
-        audioPromise.catch(() => {
-          els.speechBubble.textContent = "Clique novamente em assistir para liberar o áudio no navegador.";
-        });
-      }
-    }
-    playTone(520, 0.12, 0.04);
-    return;
-  }
-
-  if (!els.visual.classList.contains("has-video")) {
-    els.speechBubble.textContent = "O vídeo deste cliente ainda não foi carregado. Gere o MP4 e salve em assets/videos para este nível.";
-    els.videoPlaceholder.classList.remove("hidden");
-    playTone(180, 0.16, 0.05);
-    return;
-  }
-  state.videoPlaying = true;
-  els.visual.classList.add("video-playing", "speaking");
-  els.clientVideo.muted = false;
-  const playPromise = els.clientVideo.play();
-  if (playPromise) {
-    playPromise.catch(() => {
-      els.speechBubble.textContent = "O navegador bloqueou o áudio. Clique diretamente no player do vídeo para liberar som e reprodução.";
-    });
-  } else {
-    playTone(520, 0.12, 0.04);
-  }
-}
-
-function pauseClientVideo() {
-  state.videoPlaying = false;
-  els.visual.classList.remove("video-playing", "speaking");
-  els.clientVideo.pause();
-  els.clientAudio.pause();
-}
-
-function loadClientVideo() {
-  const src = caseVideoFiles[state.current];
-  const gifSrc = caseGifFiles[state.current];
-  const audioSrc = caseAudioFiles[state.current];
-  if (els.clientVideo.dataset.src === src && els.clientGif.dataset.src === gifSrc && els.clientAudio.dataset.src === audioSrc) return;
-  els.visual.classList.remove("has-video", "has-gif", "has-audio", "video-playing", "speaking");
-  els.clientVideo.pause();
-  els.clientAudio.pause();
-  els.clientVideo.removeAttribute("src");
-  els.clientAudio.removeAttribute("src");
-  els.clientVideo.dataset.src = src;
-  els.clientGif.removeAttribute("src");
-  els.clientGif.dataset.src = gifSrc;
-  els.clientAudio.dataset.src = audioSrc;
-  els.clientVideo.load();
-  els.clientAudio.load();
-  els.videoPlaceholder.classList.remove("hidden");
-
-  fetch(audioSrc, { method: "HEAD" })
-    .then((response) => {
-      if (!response.ok) throw new Error("audio missing");
-      const length = Number(response.headers.get("content-length") || 0);
-      if (length < 1000) throw new Error("empty audio");
-      els.clientAudio.src = audioSrc;
-      els.clientAudio.load();
-      els.visual.classList.add("has-audio");
-    })
-    .catch(() => {
-      els.visual.classList.remove("has-audio");
-    });
-
-  fetch(src, { method: "HEAD" })
-    .then((response) => {
-      if (!response.ok) throw new Error("video missing");
-      els.clientVideo.src = src;
-      els.clientVideo.load();
-      els.visual.classList.add("has-video");
-      els.videoPlaceholder.classList.add("hidden");
-    })
-    .catch(() => {
-      fetch(gifSrc, { method: "HEAD" })
-        .then((response) => {
-          if (!response.ok) throw new Error("gif missing");
-          els.clientGif.src = gifSrc;
-          els.visual.classList.add("has-gif");
-          els.videoPlaceholder.classList.add("hidden");
-        })
-        .catch(() => {
-          els.videoPlaceholder.innerHTML = `<strong>Vídeo IA do cliente pendente</strong><span>Salve o arquivo como <code>${src}</code>. O jogo tocará o vídeo automaticamente nesta área.</span>`;
-        });
-    });
 }
 
 function calcKey(future, regime) {
@@ -830,7 +627,6 @@ function renderMetrics() {
   els.clients.textContent = state.clients;
   els.currentTeam.textContent = activeTeam();
   els.teamName.value = state.team;
-  els.sound.textContent = state.soundOn ? "Som: on" : "Som: off";
 }
 
 function renderLevels() {
@@ -852,7 +648,6 @@ function renderLevels() {
     btn.addEventListener("click", () => {
       if (locked || done) return;
       state.current = index;
-      state.talkIndex = 0;
       render();
     });
     els.levelList.appendChild(btn);
@@ -1008,7 +803,6 @@ function checkCalculations(future = false) {
     state.coins += bonus;
     state.reputation = clamp(state.reputation + Math.round(score / 35), 0, 100);
     recordCalcAction(caseItem, future, score, details, bonus);
-    playTone(score >= 70 ? 660 : 240, 0.16, 0.05);
   }
 
   render();
@@ -1051,7 +845,6 @@ function chooseOption(optionId) {
   state.unlocked = clamp(Math.max(state.unlocked, state.current + 1), 0, cases.length - 1);
 
   recordAction(caseItem, selected);
-  playTone(good ? 740 : 180, 0.22, 0.06);
   render();
   setTab("options");
 }
@@ -1313,7 +1106,6 @@ function exportHtmlReport() {
 }
 
 function restart() {
-  pauseClientVideo();
   state.current = 0;
   state.unlocked = 0;
   state.coins = 500;
@@ -1323,7 +1115,6 @@ function restart() {
   state.answers = Array(cases.length).fill(null);
   state.calcInputs = {};
   state.calcResults = {};
-  state.talkIndex = 0;
   setTab("calc");
   render();
 }
@@ -1338,15 +1129,11 @@ function render() {
   els.avatar.textContent = caseItem.initials;
   els.characterName.textContent = caseItem.character;
   els.characterLine.textContent = caseItem.line;
-  const talkLines = currentTalkLines();
-  els.interactionLine.textContent = talkLines[state.talkIndex % talkLines.length];
-  els.speechBubble.textContent = talkLines[state.talkIndex % talkLines.length];
-  els.visual.classList.toggle("video-playing", state.videoPlaying);
   els.story.textContent = caseItem.story;
   els.visual.style.setProperty("--case-image", caseImages[state.current]);
-  loadClientVideo();
   els.visualPlace.textContent = caseItem.place;
   els.visualTitle.textContent = caseItem.title;
+  els.companyDescription.textContent = (dialogueExtensions[state.current] || []).join(" ");
   renderCaseData(caseItem);
   renderOptions(caseItem);
   renderCalc(caseItem);
@@ -1375,65 +1162,18 @@ els.teamName.addEventListener("keydown", (event) => {
   if (event.key === "Enter") els.saveTeam.click();
 });
 
-els.sound.addEventListener("click", () => {
-  setSound(!state.soundOn);
-});
-
-els.bigSound.addEventListener("click", () => {
-  setSound(!state.soundOn);
-});
-
-els.startVideo.addEventListener("click", () => {
-  startClientVideo();
-});
-
-els.pauseVideo.addEventListener("click", () => {
-  pauseClientVideo();
-});
-
-els.clientVideo.addEventListener("play", () => {
-  state.videoPlaying = true;
-  els.visual.classList.add("video-playing", "speaking");
-});
-
-els.clientVideo.addEventListener("pause", () => {
-  state.videoPlaying = false;
-  els.visual.classList.remove("video-playing", "speaking");
-});
-
-els.clientVideo.addEventListener("ended", () => {
-  pauseClientVideo();
-});
-
-els.clientAudio.addEventListener("ended", () => {
-  els.visual.classList.remove("speaking");
-});
-
-els.clientVideo.addEventListener("error", () => {
-  els.visual.classList.remove("has-video", "video-playing", "speaking");
-  els.videoPlaceholder.classList.remove("hidden");
-});
-
 els.unlockTeacher.addEventListener("click", () => {
   if (els.teacherCode.value.trim().toLowerCase() === TEACHER_CODE) {
     state.teacherOpen = true;
     renderReports();
-    playTone(620, 0.12, 0.05);
   } else {
     els.teacherCode.value = "";
     els.teacherCode.placeholder = "Código incorreto";
-    playTone(180, 0.16, 0.05);
   }
 });
 
 els.teacherCode.addEventListener("keydown", (event) => {
   if (event.key === "Enter") els.unlockTeacher.click();
-});
-
-els.talkBtn.addEventListener("click", () => {
-  state.talkIndex += 1;
-  render();
-  speakLine(els.interactionLine.textContent);
 });
 
 els.prev.addEventListener("click", () => {
@@ -1442,10 +1182,7 @@ els.prev.addEventListener("click", () => {
 
 els.next.addEventListener("click", () => {
   if (!state.answers[state.current]) return;
-  pauseClientVideo();
   state.current = clamp(Math.min(state.current + 1, state.unlocked), 0, cases.length - 1);
-  state.talkIndex = 0;
-  state.videoLine = 0;
   setTab("calc");
   render();
 });
